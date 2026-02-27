@@ -1,0 +1,147 @@
+# Serendipity Engine Module
+# Creates surprising cross-domain connections
+
+model: big_model_set
+
+schema:
+  metadata:
+    type: object
+    properties:
+      serendipities:
+        type: array
+        items:
+          type: object
+          properties:
+            title:
+              type: string
+            content:
+              type: string
+            domains:
+              type: array
+              items:
+                type: string
+              minItems: 2
+            source_papers:
+              type: array
+              items:
+                type: string
+              minItems: 1
+            intersection_type:
+              type: string
+              enum: ["tech_domain", "tool_interest", "problem_solution", "skill_transfer", "multi_domain"]
+            surprise_highlights:
+              type: array
+              items:
+                type: string
+            surprise_factor:
+              type: number
+              minimum: 0
+              maximum: 1
+              description: "How unexpected this connection is (0=obvious, 1=mind-blowing)"
+            relevance_score:
+              type: number
+              minimum: 0.7
+              maximum: 1.0
+          required:
+            - title
+            - content
+            - domains
+            - source_papers
+            - intersection_type
+            - surprise_highlights
+            - surprise_factor
+            - relevance_score
+
+
+
+prompt: |-
+  ## Module: Serendipity Engine
+
+  **Goal**: Create genuine "I never thought of that!" moments through cross-pollination.
+
+  **Algorithm**:
+  1. Identify distinct interest domains (tech, hobbies, domain expertise, etc.)
+  2. Trace which specific papers introduce those domains (paper_id references just like `connected_papers` in the Paper Connections module)
+  3. Look for intersection points between seemingly unrelated areas
+  4. Surface unexpected thematic echoes or historical discussions that suddenly become relevant
+  5. Describe why the collision is surprising without prescribing execution details
+
+  **Cross-Domain Types**:
+  - **Tech × Domain**: ML + Biology = Genomics analysis
+  - **Tool × Interest**: Python automation + Photography = Batch editing pipeline
+  - **Problem × Solution**: Backend scaling + Music streaming = Distributed audio processing
+  - **Skill Transfer**: Database optimization → File system organization
+
+  **Quality Bar**:
+  - Must involve ≥2 distinct domains
+  - Connection must be non-obvious (not just "use tech for hobby")
+  - Should stay descriptive—no step-by-step plans or execution checklists
+  - Every serendipity must cite the concrete `paper_id` sources that informed it
+  - Extra points for finding 3+ way intersections
+
+  **What Makes Good Serendipity**:
+  - User has the pieces but hasn't connected them yet
+  - Combination creates unique capability
+  - Feels like "of course! why didn't I think of that?"
+  - Opens new possibilities
+
+  **Output Requirements**:
+  - You should identify and output MULTIPLE serendipities (at least 2-5 serendipities if possible)
+  - Each serendipity should include:
+      - title: "Creative name for the connection"
+      - content: "The unexpected connection + why it's powerful + what makes it a surprising insight"
+      - domains: ["Domain 1", "Domain 2", "Domain 3"] (array of domain names, at least 2)
+      - source_papers: ["paper_id_a", "paper_id_b"] (array of paper IDs referenced, mirroring the Paper Connections format)
+      - intersection_type: "tech_domain" | "tool_interest" | "problem_solution" | "skill_transfer" | "multi_domain"
+      - surprise_highlights: ["Key surprising angle 1", "..."] (array of short statements capturing the unexpected aspects)
+      - surprise_factor: 0.0-1.0 (how unexpected the connection is, 0=obvious, 1=mind-blowing)
+      - relevance_score: 0.7-1.0 (relevance score for this serendipity)
+
+  **Examples**:
+  - User knows: Graph Neural Networks + Computational Biology + Protein Networks → "Message-passing mechanisms in GNNs structurally mirror biological signal transduction pathways, suggesting cross-domain architectural insights."
+  - User has: Meta-Learning + Systematic Reviews + Few-Shot Learning → "Both fields address learning from limited data through hierarchical knowledge structures, revealing parallel methodological frameworks."
+  - Hidden link: Old paper on attention mechanisms + New interest in transformer architectures → "Early attention research in cognitive science foreshadowed the self-attention mechanisms that revolutionized NLP."
+
+  **Output Format**:
+
+  Output a JSON object with a `metadata` field containing a `serendipities` array. Each element in the array represents one serendipity with the required fields.
+
+  ```json
+  {schema}
+  ```
+
+  Example structure:
+  ```json
+  {{
+    "metadata": {{
+      "serendipities": [
+        {{
+          "title": "Graph Neural Networks Meet Computational Biology",
+          "content": "Recent advances in graph neural networks for molecular property prediction share fundamental architectural principles with protein-protein interaction network analysis methods, revealing that message-passing mechanisms in GNNs mirror biological signal transduction pathways. This connection suggests that domain knowledge from computational biology could inform novel GNN architectures, while GNN innovations could enhance protein function prediction accuracy.",
+          "domains": ["Graph Neural Networks", "Computational Biology", "Protein Networks"],
+          "source_papers": ["paper_id_1", "paper_id_7"],
+          "intersection_type": "tech_domain",
+          "surprise_highlights": ["Message-passing in GNNs structurally resembles cellular signaling cascades", "Protein interaction prediction methods use similar attention mechanisms as graph transformers"],
+          "surprise_factor": 0.85,
+          "relevance_score": 0.9
+        }},
+        {{
+          "title": "Meta-Learning Paradigms Across Disciplines",
+          "content": "Few-shot learning techniques in computer vision and meta-analysis methodologies in systematic reviews both address the challenge of learning from limited data by leveraging prior knowledge structures. The meta-learning framework of 'learning to learn' finds parallel expression in how systematic review protocols extract generalizable patterns across heterogeneous study populations, suggesting cross-pollination opportunities for both fields.",
+          "domains": ["Meta-Learning", "Systematic Reviews", "Few-Shot Learning"],
+          "source_papers": ["paper_id_3", "paper_id_4", "paper_id_10"],
+          "intersection_type": "problem_solution",
+          "surprise_highlights": ["Both fields use hierarchical Bayesian approaches to model uncertainty", "Meta-learning optimization strategies mirror how review protocols adapt to study heterogeneity"],
+          "surprise_factor": 0.75,
+          "relevance_score": 0.85
+        }}
+      ]
+    }}
+  }}
+  ```
+
+  **Input Data**:
+
+  <user_memories>
+  {user_memories}
+  </user_memories>

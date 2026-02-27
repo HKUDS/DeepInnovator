@@ -1,0 +1,108 @@
+# Paper Reference Extractor Agent
+# Extracts all referenced papers from a given paper, including title, URL, and authors
+
+model: model_set
+
+schema:
+  type: object
+  description: "Extract all papers from the Reference/Bibliography section of the input paper"
+  properties:
+    references:
+      type: array
+      description: "List of all papers listed in the Reference/Bibliography section of the input paper"
+      items:
+        type: object
+        properties:
+          title:
+            type: string
+            description: "Title of the referenced paper"
+          url:
+            type: string
+            description: "URL of the referenced paper (if available, empty string if not)"
+          authors:
+            type: array
+            items:
+              type: string
+            description: "List of authors of the referenced paper (if available, empty array if not)"
+        required:
+          - title
+          - url
+          - authors
+      minItems: 0
+  required:
+    - references
+
+prompt: |-
+  ## Task: Extract Paper References from Reference Section
+
+  **Goal**: Extract all papers listed in the **Reference Section** (also called Bibliography, Works Cited, or References) of the input paper, including their titles, URLs (if available), and authors (if available).
+
+  **Important**: 
+  - **ONLY** extract papers from the Reference/Bibliography section at the end of the paper
+  - **DO NOT** extract papers mentioned in the main text or body of the paper
+  - The Reference section is typically located at the end of the paper and may be labeled as:
+    - "References"
+    - "Bibliography"
+    - "Works Cited"
+    - "Literature Cited"
+    - Or similar section headers
+
+  **Instructions**:
+  1. Locate the Reference/Bibliography section in the input paper (usually at the end)
+  2. Extract all academic papers, articles, or publications listed in that section
+  3. For each reference entry in the Reference section, extract:
+     - **Title**: The full title of the referenced paper
+     - **URL**: Any URL associated with the paper (arXiv links, DOI links, conference/journal URLs, etc.). If no URL is found in the reference entry, use an empty string ""
+     - **Authors**: List of authors' names as listed in the reference entry. If authors are not mentioned or cannot be extracted, use an empty array []
+  4. Be thorough - extract ALL references from the Reference section, not just a subset
+  5. Each reference entry should appear only once in the output
+  6. For references where information is incomplete (e.g., only title mentioned, no authors or URL), still include them with available information
+
+  **Output Format**:
+  - Return a JSON object with a `references` array
+  - Each element in the array should be a paper reference with the required fields
+  - Ensure all fields are properly formatted (title as string, url as string, authors as array of strings)
+
+  **Example Output Structure**:
+  ```json
+  {schema}
+  ```
+
+  **Example**:
+  ```json
+  {{
+    "references": [
+      {{
+        "title": "Attention Is All You Need",
+        "url": "https://arxiv.org/abs/1706.03762",
+        "authors": ["Vaswani, A.", "Shazeer, N.", "Parmar, N.", "et al."]
+      }},
+      {{
+        "title": "BERT: Pre-training of Deep Bidirectional Transformers",
+        "url": "https://arxiv.org/abs/1810.04805",
+        "authors": ["Devlin, J.", "Chang, M. W.", "Lee, K.", "Toutanova, K."]
+      }},
+      {{
+        "title": "Some Paper Title",
+        "url": "",
+        "authors": ["Author1, A.", "Author2, B."]
+      }}
+    ]
+  }}
+  ```
+
+  **Input Paper Content**:
+  <paper_content>
+  {paper_content}
+  </paper_content>
+
+  **Notes**:
+  - **CRITICAL**: Only extract from the Reference/Bibliography section at the end of the paper. Ignore any papers mentioned in the main text.
+  - The Reference section typically contains numbered or bulleted entries with full citation information
+  - For arXiv papers, the URL typically follows the pattern: https://arxiv.org/abs/[paper_id]
+  - For DOI links, they typically follow: https://doi.org/[doi_number]
+  - Author names may appear in various formats (Last, First; First Last; etc.) - preserve the format as found in the reference entry
+  - If a reference entry is incomplete or ambiguous, still include it with whatever information is available
+  - Focus on academic papers, conference proceedings, journal articles listed in the Reference section
+  - You may skip books, websites, or non-academic sources if they appear in the Reference section, unless they are clearly academic publications
+

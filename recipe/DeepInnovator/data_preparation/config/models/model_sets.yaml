@@ -1,0 +1,7 @@
+# Model group definitions
+
+model_set:
+  - gpt-4o
+
+idea_spark_model_set:
+  - qwen-14b-instruct

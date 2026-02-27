@@ -1,0 +1,2 @@
+- name: ResearchGAN_agent
+  _target_: recipe.ResearchGAN.ResearchGAN_agent_loop.ResearchGANAgentLoop

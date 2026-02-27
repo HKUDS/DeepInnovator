@@ -1,0 +1,88 @@
+model: model_set
+
+schema:
+  metadata:
+    type: object
+    properties:
+      trending_signals:
+        type: array
+        items:
+          type: object
+          properties:
+            trend_name:
+              type: string
+            description:
+              type: string
+            source_papers:
+              type: array
+              items:
+                type: string
+            projected_impact:
+              type: string
+            maturity_stage:
+              type: string
+              enum: ["nascent", "emerging", "accelerating", "mature"]
+            confidence:
+              type: number
+              minimum: 0.0
+              maximum: 1.0
+          required:
+            - trend_name
+            - description
+            - source_papers
+            - projected_impact
+            - maturity_stage
+            - confidence
+
+
+prompt: |-
+  ## Module: Research Trend Radar
+
+  **Goal**: Using only the provided paper memories, synthesize the most compelling research trend signals and explain which papers drive each trend plus what it means for future work.
+
+  **Inputs**:
+  - paper_memories: For every paper, you receive its abstract, methods, findings, limitations, and latent opportunities
+
+  **Approach**:
+  1. Read all paper memories and cluster recurring themes (shared methods, target tasks, bottlenecks, cross-domain combinations, etc.)
+  2. Validate whether each theme qualifies as a “trend”: multiple supporting papers, reuse across tasks, signs of acceleration, or external drivers
+  3. For every trend, write a 1‑2 sentence trend summary (description). It must explicitly name the research object/task, e.g., “There is growing interest in building DeepResearch evaluation benchmarks for open-ended QA.”
+  4. Use paper-memory details to outline the core claim, the supporting paper set (source_papers), the projected impact area (academia/industry/tooling), and the maturity stage
+  5. Assign a 0‑1 confidence score that reflects evidence strength and list every paper_id that materially contributes to the trend (source_papers)
+
+  **Quality Bar**:
+  - Trend names must be concrete (e.g., “Retriever-Aware Synthesizers for Multi-Hop QA”)
+  - Descriptions must cite the key techniques or combinations—no vague statements
+  - Each description is a crisp trend summary highlighting the research topic/task/benchmark
+  - `source_papers` must enumerate all supporting paper_ids; annotate notable roles if needed
+  - Produce at least 2 trends; if evidence is insufficient, explain why but still output structured JSON
+
+  **Output Format**:
+  Return JSON with `metadata.trending_signals` adhering to the schema.
+  ```json
+  {schema}
+  ```
+  Example:
+  ```json
+  {{
+    "metadata": {{
+      "trending_signals": [
+        {{
+          "trend_name": "Retriever-Aware Synthesizers for Multi-Hop QA",
+          "description": "There is a growing push to build DeepResearch-style evaluation benchmarks that stress open-ended QA reasoning and grading quality.",
+          "source_papers": ["paper_003", "paper_009", "paper_021", "paper_030"],
+          "projected_impact": "Improves reliability of multi-hop QA, complex agent planning, and knowledge-intensive workflows—likely to be adopted by research assistants and tooling stacks.",
+          "maturity_stage": "emerging",
+          "confidence": 0.78
+        }}
+      ]
+    }}
+  }}
+  ```
+
+  **Input Data**:
+
+  <paper_memories>
+  {paper_memories}
+  </paper_memories>
+

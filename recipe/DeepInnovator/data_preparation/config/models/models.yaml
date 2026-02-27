@@ -1,0 +1,22 @@
+# Each model references its provider and overrides specific settings
+
+gpt-4o:
+  provider: openai
+  model_name: gpt-4o
+  supports_vision: false
+  generation_config:
+    max_tokens: 10000
+
+qwen3-max:
+  provider: openai
+  model_name: qwen3-max
+  supports_vision: false
+  generation_config:
+    max_tokens: 10000
+
+qwen-14b-instruct:
+  provider: openai
+  model_name: qwen-14b-instruct
+  supports_vision: false
+  generation_config:
+    max_tokens: 10000

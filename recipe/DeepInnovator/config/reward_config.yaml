@@ -1,0 +1,26 @@
+config:
+  enable_log: False
+  num_retries: 10
+  # num_examine: 0
+  # reward_fn_key: "data_source"
+  # normalize_by_data_source: False
+  
+  metric_weights:
+    delta_reward: 5
+    token_amount: 0.1
+  
+  default_reward_kwargs:
+    model: "your model"
+    api_key: "your api key"
+    api_base: "your api base"
+    max_tokens: 2048
+    temperature: 1.0
+    num_retries: 5
+  
+  delta_reward_kwargs:
+    model: "your model"
+    api_key: "your api key"
+    api_base: "your api base"
+    max_tokens: 2048
+    temperature: 1.0
+    num_retries: 5

@@ -1,0 +1,92 @@
+# Paper Analyzer Agent
+# Analyzes academic papers and extracts key structured information
+
+model: model_set
+
+schema:
+  type: object
+  properties:
+    paper_title:
+      type: string
+      description: "The main title of the research paper"
+    paper_summary:
+      type: string
+      description: "A concise summary of the research paper"
+    research_domain:
+      type: array
+      description: "Multiple research domains or fields (e.g., 'Retrieval-Augmented Generation', 'Large Language Models', 'Natural Language Processing')"
+      items: {type: string}
+    key_findings:
+      type: array
+      description: "Most important findings or contributions of the paper"
+      items: {type: string}
+    methodology:
+      type: string
+      description: "Core methodology or approach used in the research"
+    limitations:
+      type: array
+      description: "Key limitations or constraints identified in the paper"
+      items: {type: string}
+    future_work:
+      type: array
+      description: "Suggested future research directions mentioned in the paper"
+      items: {type: string}
+    confidence:
+      type: number
+      minimum: 0.0
+      maximum: 1.0
+      description: "Confidence level in the extracted information (0.0-1.0)"
+
+prompt: |-
+  Name: Paper Analyzer
+  Description: Extract structured insights from academic papers in markdown format
+
+  # Task Instructions
+  Analyze the provided academic paper and extract key structured information about its content, methodology, findings, and implications.
+
+  # Extraction Guidelines
+
+  ## Paper Title
+  - Extract the exact title as it appears in the paper
+  - Include any subtitles if present
+
+  ## Paper Summary
+  - Extract a concise summary of the paper
+  - Include the main research problem, methodology, key findings, and implications
+  - Be concise and to the point
+
+  ## Research Domain
+  - Identify the primary research field or domain
+  - Be specific but broad enough to encompass the paper's scope
+  - Examples: "Deep Learning", "Reinforcement Learning", "Computational Biology", "Human-Computer Interaction"
+
+  ## Key Findings
+  - Extract the most significant contributions or discoveries
+  - Focus on novel insights, not just methodology descriptions
+  - Limit to 3-5 most important findings
+  - Use concise, clear statements
+
+  ## Methodology
+  - Describe the core approach or framework used
+  - Include key techniques, algorithms, or experimental setup
+  - Be specific about what makes this methodology unique
+
+  ## Limitations
+  - Extract explicit limitations mentioned by the authors
+  - Include constraints on applicability, scalability, or assumptions
+  - Focus on substantive limitations, not minor caveats
+
+  ## Future Work
+  - Extract specific future research directions suggested by authors
+  - Include both direct suggestions and implied next steps
+  - Focus on concrete, actionable research directions
+
+  # Output Format
+  ```json
+  {schema}
+  ```
+
+  # Input Data
+  <paper_content>
+  {paper_content}
+  </paper_content>

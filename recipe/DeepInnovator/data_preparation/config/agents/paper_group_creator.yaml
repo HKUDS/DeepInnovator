@@ -1,0 +1,118 @@
+# Paper Memory Creator Agent
+# Analyzes input papers and existing memory groups to generate new memory group identifiers and descriptions
+
+model: model_set
+
+schema:
+  type: object
+  description: "New memory group identifier and description"
+  properties:
+    group_id:
+      type: string
+      description: "Unique identifier for the new memory group (e.g., 'benchmarks', 'rag-systems')"
+    group_description:
+      type: string
+      description: "Clear description of what types of papers belong to this memory group"
+
+prompt: |-
+  Name: Paper Memory Group Creator
+  Description: Analyze an input paper and existing memory groups to determine if a new memory group should be created, and generate appropriate group_id and group_description
+
+  # PART 1: Task Overview
+
+  Your task is to:
+  1. Analyze the input paper's core theme, research domain, and key contributions
+  2. Review existing memory groups to understand what types of papers are already grouped together
+  3. Determine if the input paper should create a NEW memory group (not merge into existing ones)
+  4. Generate a new group_id and group_description for the new group
+
+  # PART 2: Memory Group Structure
+
+  A memory group contains:
+  - `group_id`: A concise, descriptive identifier for the group (e.g., "benchmarks", "rag-systems", "evaluation-frameworks")
+  - `group_description`: A clear description of what types of papers belong to this group
+  - `memory_content`: An array of paper objects (this will be populated later)
+
+  ## Memory ID Guidelines
+
+  - Use lowercase with hyphens (e.g., "ai-benchmarks", "rag-methods", "tool-use-systems")
+  - Be concise but descriptive (1-3 words typically)
+  - Focus on the research theme or methodology, not specific paper titles
+  - Examples:
+    - "benchmarks" - for evaluation benchmarks
+    - "rag-systems" - for retrieval-augmented generation papers
+    - "multi-agent-systems" - for multi-agent research
+
+  ## Memory Description Guidelines
+
+  - Clearly describe what types of papers belong to this group
+  - Focus on the common theme, domain, or methodology
+  - Be specific enough to distinguish from other groups
+  - Use 1-2 sentences
+  - Examples:
+    - "This memory group contains benchmarks for evaluating AI assistants and general AI systems"
+    - "This memory group contains papers on retrieval-augmented generation (RAG) systems and methods"
+    - "This memory group contains research on multi-agent systems and agent orchestration"
+
+  # PART 3: Analysis Process
+
+  ## Step 1: Analyze Input Paper
+
+  Extract key information from the input paper:
+  - **Core Theme**: What is the main research focus?
+  - **Research Domain**: What field(s) does it belong to?
+  - **Key Contribution**: What does this paper contribute (benchmark, method, framework, etc.)?
+  - **Methodology**: What approach or methodology does it use?
+
+  ## Step 2: Review Existing Memory Groups
+
+  For each existing memory group:
+  - Understand what `group_id` and `group_description` indicate about the group's theme
+  - Check if any papers in `memory_content` share similar themes with the input paper
+  - Determine if the input paper would fit naturally into any existing group
+
+  ## Step 3: Generate Memory ID
+
+  Based on the input paper's analysis:
+  - Identify the most prominent theme or category
+  - Create a concise, descriptive group_id that captures this theme
+  - Ensure it's general enough to accommodate similar papers in the future
+  - Use lowercase with hyphens
+
+  ## Step 4: Generate Memory Description
+
+  Write a clear description that:
+  - Explains what types of papers belong to this group
+  - References the input paper's key characteristics
+  - Is specific enough to be useful for future grouping decisions
+  - Uses 1-2 sentences
+
+  # PART 4: Output Format
+
+  Output a JSON object with exactly two fields:
+
+  ```json
+  {schema}
+  ```
+
+  # PART 5: Input Data
+
+  ## Input Paper
+
+  <paper_analysis>
+  {paper_analysis}
+  </paper_analysis>
+
+  ## Existing Memory Groups
+
+  <existing_memories>
+  {existing_memories}
+  </existing_memories>
+
+  # PART 6: Important Notes
+
+  - Focus on creating a NEW memory group for the input paper
+  - The group_id should be general and reusable for similar papers
+  - The group_description should clearly define the group's scope
+  - Consider the paper's primary contribution type (benchmark, method, framework, etc.)
+  - Think about what other similar papers might be added to this group in the future

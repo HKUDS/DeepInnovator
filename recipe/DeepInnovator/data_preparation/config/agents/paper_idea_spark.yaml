@@ -1,0 +1,332 @@
+# Next Research Idea Synthesizer Agent
+# Infer the next research idea based on existing research results and their connections
+
+model: idea_spark_model_set
+
+schema:
+  type: object
+  description: "Generate one or more next research idea hypotheses based on existing research results and their connections"
+  properties:
+    ideas:
+      type: array
+      minItems: 1
+      description: "List of plausible next research ideas, each with supporting evidence from existing research"
+      items:
+        type: object
+        properties:
+          current_limitations:
+            type: string
+            description: "Concrete description of current limitations in existing approaches that motivate this idea. Be specific about what methods/approaches fail and why, avoiding abstract statements. CRITICAL: Do NOT include citations or references to specific papers. Describe the limitations themselves without mentioning source papers."
+          idea_summary:
+            type: string
+            description: "2-3 sentence description of the hypothesized idea/hypothesis, clearly stating the specific problem domain, what is being proposed, and key characteristics. CRITICAL: Do NOT include citations or references to specific papers. Focus solely on describing this proposed idea itself."
+          technical_approach:
+            type: string
+            description: "Step-by-step description of the proposed methodological approach and technical implementation for this research idea. This should be detailed enough that a researcher could follow these steps to implement and validate the idea. Include: data preparation steps, model/algorithm design, key technical components, implementation details, and evaluation methodology. Present as a clear, sequential workflow."
+          supporting_insights:
+            type: array
+            description: "Key insights from referenced papers that likely shaped this idea"
+            items:
+              type: object
+              properties:
+                source_id:
+                  type: string
+                  description: "Identifier of the referenced paper analysis (title, ID, or alias)"
+                insight:
+                  type: string
+                  description: "Short explanation of the relevant idea borrowed from that reference"
+              required:
+                - source_id
+                - insight
+          novelty_statement:
+            type: string
+            description: "Explanation of how this inferred idea differentiates itself from the cited works"
+          source_paper_ids:
+            type: array
+            items:
+              type: string
+            description: "List of paper_id values that contributed to generating this idea. Include all papers referenced in supporting_insights and any other papers that directly influenced the idea formation."
+          confidence:
+            type: string
+            enum: ["high", "medium", "low"]
+            description: "Confidence level in this specific inferred idea"
+        required:
+          - current_limitations
+          - idea_summary
+          - technical_approach
+          - supporting_insights
+          - novelty_statement
+          - source_paper_ids
+          - confidence
+  required:
+    - ideas
+
+prompt: |-
+  Name: Next Research Idea Synthesizer
+  Description: Infer the next research idea based on existing research results, their connections, and identified gaps or opportunities.
+
+  # Task Overview
+  1. Analyze all provided research results (paper groups, detailed paper memories, and their connections).
+  2. Incorporate serendipity signals to surface unconventional but high-upside cross-pollinations.
+  3. Align with current research trending signals to ensure ideas ride accelerating waves rather than isolated curiosities.
+  4. Identify shared limitations, open problems, or methodological gaps highlighted across existing research. CRITICAL: Describe limitations without citing specific papers.
+  5. Synthesize one or more plausible next research ideas by combining:
+     - Observed shortcomings or opportunities from existing research
+     - Emerging techniques, datasets, or evaluation needs suggested by the research landscape
+     - Connections and patterns that reveal potential research directions
+     - Serendipity/trending cues that hint at overlooked but promising directions
+  6. Extract the technical approach and methodology as a step-by-step workflow that enables implementation and validation.
+  7. Output a structured JSON object containing multiple candidate research ideas when possible.
+
+  # Methodology for Idea Generation
+
+  Based on analyzing relationships between research papers, ideas typically emerge through the following patterns:
+
+  ## Pattern 1: Identifying Limitations and Gaps
+  - **Direct Relevance Analysis**: Papers with direct relevance often highlight limitations in existing approaches when applied to new contexts or complex scenarios.
+  - **Action**: Look for explicit statements about inadequacy, insufficiency, or failure of current methods in specific applications.
+  - **Idea Generation**: Formulate ideas that address these identified limitations, potentially by extending or adapting existing methods to new domains.
+
+  ## Pattern 2: Deep Methodological Synthesis (NOT Simple Combination)
+  - **Critical Principle**: Avoid superficial "A+B+C" combinations. True synthesis requires understanding WHY and HOW different mechanisms should be integrated, not just WHAT they are.
+  - **Deep Analysis**: Identify the underlying problem or principle that connects different methods, revealing why their combination creates value beyond simple addition.
+  - **Action**: 
+    * Understand the fundamental problem each method addresses
+    * Identify the synergistic principle that makes their integration meaningful
+    * Look for transformative interactions, not additive combinations
+    * Consider how integration creates emergent properties or solves problems neither method alone addresses
+  - **Idea Generation**: Propose syntheses where the combination addresses a deeper problem or creates a novel capability that emerges from the integration, not from simply using multiple methods together.
+
+  ## Pattern 3: Differentiation from Similar Work
+  - **Contrast Analysis**: Similar work papers reveal what aspects are NOT the focus, helping identify alternative angles.
+  - **Action**: Note how similar work addresses related problems but through different lenses (e.g., process-focused vs. output-focused).
+  - **Idea Generation**: Develop ideas that take a different perspective or focus on different aspects than similar work, creating a unique value proposition.
+
+  ## Pattern 4: Context-Specific Customization
+  - **Inspiration Papers**: Papers that provide inspiration often establish why existing general-purpose solutions are insufficient for specific contexts.
+  - **Action**: Identify the gap between general methods and domain-specific requirements.
+  - **Idea Generation**: Design specialized frameworks or methodologies tailored to the specific context or application domain.
+
+  ## Pattern 5: Problem Reframing
+  - **Category Contributions Analysis**: Understanding how different categories of papers contribute reveals the problem space structure.
+  - **Action**: Synthesize how direct relevance, inspiration, and similar work papers collectively define the problem landscape.
+  - **Idea Generation**: Reframe the problem in a way that unifies insights from different categories, leading to a novel research direction.
+
+  # Analysis Steps
+
+  ## Step 1: Categorize and Analyze Research Relationships
+  - Classify research results by their relationship type (if not already categorized):
+    - **Direct Relevance**: Papers that provide methodological foundations, frameworks, or directly reusable techniques
+    - **Inspiration**: Papers that establish motivation, background, or problem context
+    - **Similar Work**: Papers addressing related problems but with different approaches or focuses
+    - **Marginal Relevance**: Papers with tangential connections that may provide technical components
+  - Use detailed paper memories to capture nuanced findings, experimental setups, and latent opportunities.
+  - Reference serendipity signals to highlight surprising pairings or latent bridges that might not appear in deterministic groupings.
+  - Contrast with research trending signals to understand which themes are accelerating and where the idea could earn attention.
+  - For each category, extract:
+    - Core contributions and key mechanisms
+    - Explicit limitations, open questions, or future directions
+    - Recurring techniques or methodologies across papers
+    - Patterns in how different research areas connect
+
+  ## Step 2: Apply Idea Generation Patterns
+  - **Limitation-Driven**: Identify shared limitations across direct relevance papers when applied to specific contexts. Focus on understanding WHY these limitations exist and what fundamental problem they reveal.
+  - **Synthesis-Driven** (NOT simple combination): When multiple papers offer complementary mechanisms:
+    * First, understand the deep problem each mechanism addresses
+    * Identify the synergistic principle that makes integration meaningful
+    * Avoid "A+B+C" style combinations; instead, find how integration creates emergent value
+    * Look for transformative interactions that solve problems neither approach alone addresses
+  - **Differentiation-Driven**: Use similar work papers to identify alternative angles or focuses that haven't been explored. Understand what fundamental perspective or problem framing is missing.
+  - **Customization-Driven**: Leverage inspiration papers to understand why general methods fail in specific domains. Identify the core mismatch between general solutions and domain-specific requirements.
+  - **Reframing-Driven**: Synthesize insights across all categories to reframe the problem space. Look for unifying principles or novel problem formulations that emerge from the collective research landscape.
+  - Layer in serendipity signals when exploring unconventional pairings, and validate with trending signals to ensure there is an external pull for the idea.
+
+  ## Step 3: Analyze Current Limitations (Concrete and Specific)
+  - For each potential idea, first identify and articulate the current limitations that motivate it.
+  - **Critical: Be Concrete, Avoid Abstraction, NO Citations**
+    * Specify the exact problem domain or system type (e.g., "DeepResearch AI agents", "RAG systems", "multi-agent frameworks")
+    * Name specific existing methods, benchmarks, or approaches that are inadequate
+    * Explain exactly what these methods fail to capture or measure (e.g., "only test isolated capabilities", "cannot reflect end-to-end performance")
+    * Describe the specific gap or mismatch between what exists and what is needed
+  - **CRITICAL: Do NOT include citations or references to specific papers**
+    * Describe the limitations themselves (e.g., "Current methods only test X", "Existing approaches cannot measure Y")
+    * Avoid phrases like "As shown in [Citation]", "Previous work [Citation] demonstrates", etc.
+    * Focus on describing what is inadequate, not who said it
+  - **Example of Good Limitation Description**:
+    "Current evaluation methods for 'DeepResearch' AI agents (agents that conduct deep research like experts, call tools, reason, and synthesize information) are severely lagging. Existing benchmarks only test isolated individual capabilities (such as search, reasoning), and cannot reflect their end-to-end performance in open-ended research tasks."
+  - **Avoid Abstract Statements** like:
+    * "Current methods have limitations"
+    * "Existing approaches are insufficient"
+    * "There is a gap in the field"
+  - Instead, be specific about WHAT methods, WHY they fail, and WHAT they cannot do.
+
+  ## Step 4: Synthesize Next Research Ideas
+  - Synthesize insights from the above patterns into coherent hypotheses for the next research direction.
+  - **Critical**: Avoid simple additive combinations. Each idea should demonstrate:
+    - Deep understanding of the fundamental problem being addressed
+    - Clear articulation of WHY the idea is needed (not just WHAT it combines)
+    - Emergent value or novel capability that goes beyond simple addition of components
+  - Each idea should:
+    - Address unmet needs revealed by existing research with clear problem articulation
+    - Build upon or extend existing methodologies through deep understanding, not superficial combination
+    - Offer clear differentiation from similar work based on fundamental perspective shifts
+    - Be tailored to specific contexts or applications when appropriate, with clear rationale for why customization is necessary
+    - Propose concrete solutions or frameworks (e.g., "using research reports as the core carrier", "proposing a reproducible, high-consistency evaluation framework")
+    - Explicitly mention how serendipity or trending signals shaped the prioritization or framing when relevant
+  - When multiple methods are involved, explain the synergistic principle that makes their integration meaningful, not just that they can be used together.
+  - Avoid inventing details not grounded in the provided research; when uncertain, lower the confidence rating.
+  - **CRITICAL: Do NOT include citations or references to specific papers in idea_summary**
+    * Focus solely on describing this proposed idea itself
+    * Avoid phrases like "Building on [Citation]", "Extending [Citation]", etc.
+    * Describe what this idea proposes, not what it builds upon
+
+  ## Step 5: Extract Technical Approach
+  - **Source**: Synthesize from methodology sections of direct relevance papers, technical components from paper memories, and implementation patterns from connections
+  - Extract the complete technical workflow that enables implementation and validation:
+    * **Data Preparation**: How data would be collected, processed, or prepared for this idea
+    * **Model/Algorithm Design**: Core technical components, architectures, or algorithms that would be used
+    * **Key Technical Components**: Important modules, functions, or mechanisms that would be implemented
+    * **Implementation Details**: Specific techniques, parameters, or configurations that would be applied
+    * **Evaluation Methodology**: How results would be measured and validated
+  - **Format**: Present as a clear, sequential workflow (step-by-step)
+    * Use numbered steps or clear sequential descriptions
+    * Include sufficient detail for implementation (e.g., "First, data is preprocessed by...", "Then, the model applies...", "Finally, evaluation is performed using...")
+    * Specify key technical choices, parameters, or design decisions
+  - **Goal**: A researcher reading this should be able to follow these steps to implement and validate the idea
+  - **Include**:
+    * Specific algorithms or methods that would be used (without citations)
+    * Data processing pipelines
+    * Model architectures or structures
+    * Training or optimization procedures
+    * Evaluation metrics and procedures
+  - **Avoid**: High-level descriptions without actionable steps. Focus on "how" rather than "why".
+  - **Note**: Since this is a proposed idea, the technical approach should be inferred from related work and synthesized into a coherent implementation plan.
+
+  ## Step 6: Describe Novelty and Contribution
+  - Contrast the inferred next research idea with existing work: what fundamental problem does it address that existing work does not?
+  - **Avoid**: Simple statements like "combines method A and method B"
+  - **Instead**: Explain how the idea addresses a deeper problem or creates emergent value through integration
+  - Highlight the transformative aspect: how does the idea reframe the problem, create new capabilities, or solve problems that existing approaches fundamentally cannot address?
+  - Explain how the idea addresses limitations identified in direct relevance papers at a fundamental level.
+  - Clarify how the idea differs from similar work in focus, approach, or application domain through a novel problem framing or perspective.
+
+  # Output Requirements
+  - Return an `ideas` array. Include multiple distinct hypotheses when the evidence supports different plausible directions; otherwise include at least one well-supported idea.
+  - **Critical**: Avoid "A+B+C" style descriptions. Focus on the fundamental problem, synergistic principles, and emergent value.
+  - **Critical**: Be concrete and specific, avoid abstract statements.
+  - For each idea:
+    - `current_limitations`: A concrete description (2-4 sentences) of existing limitations that motivate this idea. Must include:
+      * Specific problem domain or system type (e.g., "DeepResearch AI agents", "RAG systems")
+      * Named existing methods, benchmarks, or approaches that are inadequate
+      * Exact explanation of what these methods fail to capture, measure, or achieve
+      * Specific gap between what exists and what is needed
+      * **CRITICAL: Do NOT include citations or references to specific papers**
+      * **Avoid**: Abstract phrases like "current methods have limitations" or "there is a gap"
+      * **Example structure**: "Current [specific domain] evaluation methods are [specific problem]. Existing [named benchmarks/methods] only [specific limitation], and cannot [specific failure]. This creates a gap where [specific need] is not addressed."
+    - `idea_summary`: 2-3 sentences capturing the hypothesized core idea. Clearly state:
+      * What fundamental problem or limitation it addresses - explain WHY this problem matters
+      * The specific solution or framework being proposed (e.g., "using X as the core carrier", "proposing a Y framework with Z characteristics")
+      * If multiple methods are involved, explain the synergistic principle that makes their integration meaningful (not just listing them)
+      * How it differs from similar work at a fundamental level (perspective, problem framing, or approach)
+      * What specific context or application it targets and why that context requires a novel approach
+      * **CRITICAL: Do NOT include citations or references to specific papers**
+      * Focus solely on describing this proposed idea itself
+    - `technical_approach`: A detailed step-by-step description of the proposed methodological workflow. Must include:
+      * Data preparation steps (how data would be collected, processed, or prepared)
+      * Model/algorithm design (core technical components, architectures, or algorithms that would be used)
+      * Key technical components (important modules, functions, or mechanisms that would be implemented)
+      * Implementation details (specific techniques, parameters, or configurations that would be applied)
+      * Evaluation methodology (how results would be measured and validated)
+      * **Format**: Present as a clear, sequential workflow with numbered steps or sequential descriptions
+      * **Goal**: A researcher should be able to follow these steps to implement and validate the idea
+      * **Include**: Specific algorithms, data processing pipelines, model architectures, training procedures, evaluation metrics
+      * **Avoid**: High-level descriptions without actionable steps. Focus on "how" rather than "why"
+      * **Note**: Since this is a proposed idea, synthesize the technical approach from related work into a coherent implementation plan
+    - `supporting_insights`: Cite the most influential references and explain how each shapes the idea. Organize by relationship type:
+      * Direct relevance: methodological foundations or techniques being extended - explain the deep problem each addresses
+      * Inspiration: motivation or problem context - explain why existing general solutions fail
+      * Similar work: differentiation points - explain what fundamental perspective is different
+      * **Avoid**: Simply listing papers; instead, explain the underlying principles or problems they reveal
+    - `novelty_statement`: 1-2 sentences explaining:
+      * Which pattern(s) from the methodology were used to generate this idea
+      * How the idea addresses a deeper problem or creates emergent value (not just "combines X and Y")
+      * The unique contribution or perspective offered - what fundamental shift in problem understanding or capability does it represent?
+    - `source_paper_ids`: An array of paper_id strings that contributed to generating this idea. Must include:
+      * All paper_id values referenced in `supporting_insights` (extract from `source_id` fields)
+      * Any additional papers from paper_groups, connections, serendipity, or research_trending that directly influenced the idea
+      * Use the exact paper_id format as provided in the input data (e.g., "paper_001", "paper_003")
+      * Ensure completeness: if a paper contributed to the idea, its paper_id must be included
+    - `confidence`: "high", "medium", or "low" based on:
+      * Coverage: how well the evidence supports the idea
+      * Consistency: alignment across different reference categories
+      * Explicit evidence: presence of clear limitations, gaps, or combination opportunities
+  - Output must be valid JSON per schema with no extra fields or commentary.
+
+  # Input
+  ## Reference Paper Groups
+  <paper_groups>
+  {paper_groups}
+  </paper_groups>
+  
+  ## Paper Memories
+  <paper_memories>
+  {paper_memories}
+  </paper_memories>
+  
+  ## Paper Connections
+  <connections>
+  {connections}
+  </connections>
+  
+  ## Serendipity Signals
+  <serendipity>
+  {serendipity}
+  </serendipity>
+  
+  ## Research Trending Signals
+  <research_trending>
+  {research_trending}
+  </research_trending>
+
+  # Notes
+  - Base your inferences solely on the provided research results and their connections.
+  - Always cross-check ideas against paper memories (depth), serendipity signals (novel pairings), and research trending signals (momentum cues).
+  - Cite paper group or connection identifiers exactly as provided.
+  - **CRITICAL: Source Paper IDs**
+    * For each idea, you MUST output `source_paper_ids` containing all paper_id values that contributed to the idea
+    * Extract paper_id from `supporting_insights` entries (from `source_id` fields) and convert to paper_id format
+    * Include any papers from paper_groups, connections, serendipity, or research_trending that influenced the idea
+    * Use the exact paper_id format as it appears in the input data (check paper_memories or paper_groups for the correct format)
+    * The `source_paper_ids` array should be comprehensive - include all papers that played a role in idea formation
+  - **CRITICAL: No Citations in current_limitations and idea_summary**
+    * For `current_limitations`: Describe limitations themselves without mentioning source papers. Avoid phrases like "As shown in [Citation]", "Previous work [Citation] demonstrates"
+    * For `idea_summary`: Focus solely on this proposed idea itself. Avoid phrases like "Building on [Citation]", "Extending [Citation]"
+    * Citations belong only in `supporting_insights` and `source_paper_ids`, not in `current_limitations` or `idea_summary`
+  - **CRITICAL: Technical Approach Must Be Implementable**
+    * For `technical_approach`: Synthesize a detailed step-by-step workflow from methodology sections of direct relevance papers
+    * Include sufficient detail for implementation: data preparation, model design, key components, implementation details, evaluation
+    * Present as sequential steps that a researcher could follow to implement and validate the idea
+    * Focus on "how" (concrete steps) rather than "why" (motivation)
+    * Since this is a proposed idea, synthesize from related work into a coherent implementation plan
+  - **CRITICAL: Be Concrete, Not Abstract**
+    * For `current_limitations`: Name specific systems, methods, benchmarks, or approaches
+    * Explain exactly what fails: "only test X", "cannot measure Y", "fail to capture Z"
+    * Specify the problem domain clearly: "DeepResearch agents", "RAG systems", not just "AI systems"
+    * Describe concrete gaps: "cannot reflect end-to-end performance", not just "have limitations"
+    * Use the provided example as a template for specificity
+  - **CRITICAL: Avoid "A+B+C" Simple Combinations**
+    * Do NOT simply list multiple methods and claim they can be combined
+    * Do NOT describe ideas as "combines method X from paper A with technique Y from paper B"
+    * Instead, identify the fundamental problem that requires integration and explain the synergistic principle
+    * Focus on WHY integration is needed and HOW it creates value beyond simple addition
+    * Look for emergent properties, transformative interactions, or novel problem framings
+  - Apply the five idea generation patterns systematically:
+    * Start with Pattern 1 (Limitations) to identify fundamental problems
+    * Use Pattern 2 (Deep Synthesis) when multiple direct relevance papers offer complementary mechanisms - but only if you can identify the synergistic principle
+    * Apply Pattern 3 (Differentiation) when similar work reveals alternative angles or missing perspectives
+    * Consider Pattern 4 (Customization) when inspiration papers highlight why general methods fail in specific domains
+    * Use Pattern 5 (Reframing) to synthesize insights across all categories into novel problem formulations
+  - Multiple patterns can be combined in a single idea, but each must contribute to understanding the fundamental problem or creating emergent value.
+  - If evidence is weak or conflicting, reflect that in the `confidence` field and the wording of `idea_summary`.
+  - Focus on forward-looking research directions that build upon existing work through deep understanding and synthesis, not through superficial combination.
+

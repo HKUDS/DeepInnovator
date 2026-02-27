@@ -1,0 +1,237 @@
+# Paper Router Agent
+# Routes academic papers to existing paper memories or decides to create new ones
+#
+# ## PURPOSE & DESIGN
+# This agent is specifically designed for academic paper routing, adapted from the
+# memory_router but optimized for research paper characteristics:
+#
+# - Focuses on research content matching rather than keyword matching
+# - Understands academic paper structure (research domain, methodology, findings, limitations)
+# - Supports paper merging for complementary/evolutionary research relationships
+# - Prevents research fragmentation by consolidating related papers into comprehensive themes
+# - Uses academic-specific decision criteria (same research domain, complementary findings, etc.)
+#
+# ## KEY DIFFERENCES FROM MEMORY_ROUTER
+# - Uses research_domain instead of general memory types
+# - Understands paper-specific metadata (key_findings, methodology, limitations, future_work)
+# - Merging logic based on research relationships rather than general topic overlap
+# - Filtering based on academic paper quality rather than conversational noise
+
+model: model_set
+
+schema:
+  merges:
+    type: array
+    description: "Paper consolidation operations to perform before routing (optional)"
+    items:
+      type: object
+      properties:
+        source_memory_ids:
+          type: array
+          items: {type: string}
+          description: "Paper memory IDs to merge (must be 2 or more)"
+        reason:
+          type: string
+          description: "Why these papers should be merged (e.g., same research domain, complementary findings)"
+
+  extractions:
+    type: array
+    description: "Routing decisions for papers"
+    items:
+      type: object
+      properties:
+        reasoning:
+          type: string
+          description: "Think through: what is this paper about? Which existing paper memory(ies) does it relate to? Why this routing decision?"
+
+        paper_ids:
+          type: array
+          items: {type: string}
+          description: "Paper IDs to route together (aggregated if discussing same research topic)"
+
+        decision:
+          type: string
+          enum: [update_existing, create_new]
+          description: |
+            - update_existing: Found matching paper memory/memories to update
+            - create_new: No match found, create completely new paper memory
+
+        target_memory_ids:
+          type: array
+          items: {type: string}
+          description: "Paper memory IDs to update (only for update_existing). Can be multiple if spans multiple related papers."
+
+  filtered_out:
+    type: array
+    items: {type: string}
+    description: "Paper IDs that were filtered out (low quality, irrelevant, or duplicates)"
+
+prompt: |-
+  Name: Paper Router
+  Description: Filter, aggregate, and route academic papers to paper memories
+
+  # PART 1: Structure Definitions
+
+  ## Paper Memory Types
+
+  Paper memories are specialized memories for academic research papers with the following structure:
+  - type: "paper" (always)
+  - title: Exact paper title or concise summary of main contribution
+  - research_domain: Primary research field (e.g., "Machine Learning", "Computer Vision")
+  - summary: Comprehensive summary including research problem, methodology, findings, and significance
+  - key_findings: Most important contributions or discoveries (3-5 items)
+  - methodology: Core approach or framework used
+  - limitations: Key constraints identified in the paper
+  - future_work: Suggested research directions
+  - tags: Keywords following lowercase-with-hyphens format (5-8 tags maximum)
+  - history: Timeline of research insights and analysis phases
+  - confidence: Quality score (0.0-1.0) based on paper completeness and clarity
+
+  ## History Aggregation for Papers
+
+  Paper history entries should capture:
+  - Key research phases (problem definition, methodology, results, implications)
+  - Important insights extracted from the paper
+  - Connections to other research or domains
+  - Critical analysis points
+
+  ## Tags & Summary Format
+
+  **Tags**: Use lowercase with hyphens, be specific to research domain and methodology (e.g., "deep-learning", "reinforcement-learning", "transformer-architecture")
+
+  **Summary**: One comprehensive sentence covering research problem, methodology, key findings, and significance.
+
+  # PART 2: Core Principles
+
+  1. **Match on research content, not just keywords** - Papers mentioning "transformers" in different contexts may not be related
+  2. **Merge complementary papers** - Prefer fewer comprehensive research themes over many narrow papers
+  3. **Consolidate create_new** - Multiple papers on related research topics → ONE create_new decision
+  4. **Think in research domains** - What's the broader research field? (e.g., "Vision Transformers" + "Swin Transformers" = "Transformer-based Computer Vision")
+
+  # PART 3: Task & Instructions
+
+  ## Task
+
+  Your job is to:
+  0. Identify duplicate/overlapping paper memories → merge them
+  1. Filter low-quality or irrelevant papers
+  2. Group related papers by research topic
+  3. Route papers to paper memories (update existing or create new)
+
+  ## Step 1: Filter Low-Quality Papers
+
+  Filter out papers with insufficient research value:
+  - Very short papers without substantial content
+  - Duplicate papers or preprints of same work
+  - Papers with poor methodology or unclear findings
+  - Irrelevant to user's research interests
+
+  Add to `filtered_out`.
+
+  ## Step 2: Route Papers
+
+  For each paper group, write `reasoning` first, then decide:
+
+  ### Option 1: update_existing
+
+  Match when papers relate to existing paper memory's ACTUAL research scope:
+  - Look at memory's `research_domain`, `summary` and `tags`
+  - Ask: Does the CORE RESEARCH TOPIC belong in this memory?
+  - Don't match just because they share a methodology name
+
+  Examples:
+  - ✅ "Vision Transformer improvements" → "Transformer-based Computer Vision"
+  - ❌ "BERT fine-tuning" → "Computer Vision Transformers" (different domains)
+  - ✅ "Efficient attention mechanisms" → "Attention Mechanisms in Deep Learning" (actual content match)
+
+  Can match multiple memories (but only if truly relevant to each):
+  - "Multimodal transformers" → both "Transformer Architectures" + "Multimodal Learning" ✅
+  - "Transformer optimization" → only "Transformer Architectures", not every transformer application ❌
+
+  ### Option 2: create_new
+
+  Choose only if genuinely new research domain/field.
+
+  Before deciding, ask:
+  1. Can I group multiple related papers into ONE broader research theme?
+  2. What's the broader research domain? (e.g., "ViT" + "Swin" + "PVT" = "Vision Transformer Architectures")
+  3. Are there other paper groups in this batch that share research domain/methodology?
+
+  If multiple groups share domain → consolidate them into ONE create_new decision.
+
+  Example:
+  - Papers about "Vision Transformers" (vit,vit-v2)
+  - Papers about "Swin Transformers" (swin,build-swin)
+  - Papers about "PVT architectures" (pvt,build-pvt)
+  - → Don't create 3 memories, consolidate paper_ids into ONE "Vision Transformer Architectures" create_new
+
+  Don't create new if:
+  - ❌ Existing memory already covers this research domain
+  - ❌ Multiple groups share methodology/domain (consolidate instead)
+  - ❌ It's a subtopic of existing memory
+
+  # PART 4: Examples
+
+  ## Example 1: update_existing
+
+  ```json
+  {{
+    "merges": [],
+    "extractions": [
+      {{
+        "reasoning": "Paper discusses efficient attention mechanisms for transformers, which extends the 'Attention Mechanisms in Deep Learning' memory by adding optimization techniques.",
+        "paper_ids": ["vit"],
+        "decision": "update_existing",
+        "target_memory_ids": ["memory_1"]
+      }}
+    ],
+    "filtered_out": []
+  }}
+  ```
+
+  ## Example 2: Consolidating related papers into ONE create_new
+
+  ```json
+  {{
+    "merges": [],
+    "extractions": [
+      {{
+        "reasoning": "Papers cover vision transformer architectures: ViT (paper_1, paper_2), Swin Transformers (paper_5, paper_6), and PVT (paper_8, paper_9). All fall under 'Vision Transformer Architectures'. Consolidating into ONE create_new prevents research fragmentation.",
+        "paper_ids": ["paper_1", "paper_2", "paper_5", "paper_6", "paper_8", "paper_9"],
+        "decision": "create_new",
+        "target_memory_ids": []
+      }}
+    ],
+    "filtered_out": ["paper_3", "paper_7"]
+  }}
+  ```
+
+  # PART 5: Output Format
+
+  ```json
+  {schema}
+  ```
+
+  Important:
+  - Always write `reasoning` first
+  - Be aggressive about merging existing paper memories
+  - Consolidate related create_new decisions
+  - Prevent research fragmentation at the source
+
+  # PART 6: Input Data
+
+  # Existing Paper Memories
+
+  <memories>
+  {paper_memory}
+  </memories>
+
+  # Papers to Process
+
+  <papers>
+  {paper_content}
+  </papers>
+
+  <paper info>
+  {paper_info}
+  </paper info>

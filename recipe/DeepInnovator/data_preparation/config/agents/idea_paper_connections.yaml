@@ -1,0 +1,107 @@
+# Paper Connections Module
+# Finds meaningful connections between different research papers
+
+model: model_set
+
+schema:
+  metadata:
+    type: object
+    properties:
+      connections:
+        type: array
+        items:
+          type: object
+          properties:
+            source_papers:
+              type: array
+              items:
+                type: string
+            connection_type:
+              type: string
+              enum: ["complementary", "contradictory", "evolutionary", "methodological", "cross-domain"]
+            research_opportunity:
+              type: string
+            confidence:
+              type: number
+              minimum: 0.0
+              maximum: 1.0
+          required:
+            - source_papers
+            - connection_type
+            - research_opportunity
+            - confidence
+
+
+
+prompt: |-
+  ## Module: Paper Connections
+
+  **Goal**: Identify meaningful connections between research papers in the user's collection.
+
+  **Algorithm**:
+  1. Extract research domains, methodologies, key findings, and limitations from all paper memories
+  2. Find papers that complement, contradict, or build upon each other
+  3. Identify research gaps that could be addressed by combining insights from multiple papers
+  4. Look for methodological similarities or differences across domains
+
+  **Connection Types**:
+  - **Complementary**: Papers that address different aspects of the same problem
+  - **Contradictory**: Papers with conflicting findings or assumptions
+  - **Evolutionary**: One paper builds upon or extends another
+  - **Methodological**: Papers using similar/different methods for similar problems
+  - **Cross-domain**: Papers from different domains addressing similar challenges
+
+  **Quality Bar**:
+  - Connection should be substantive, not superficial
+  - Should suggest concrete research implications
+  - At least 2 papers must be involved
+  - Connection should provide new insight beyond individual papers
+
+  **Output Requirements**:
+  - You should identify and output MULTIPLE connections (at least 2-5 connections if possible)
+  - Each connection should include:
+      - source_papers: ["Paper A", "Paper B", ...] (array of paper_id, which will be provided in the input data)
+      - connection_type: "complementary" | "contradictory" | "evolutionary" | "methodological" | "cross-domain"
+      - research_opportunity: "Specific research opportunity enabled by this connection"
+      - confidence: 0.0-1.0 (your confidence in this connection)
+
+  **Examples**:
+  - "DeepResearch Evaluation + LLM-as-Judge Methods = Comprehensive Research Assessment Framework"
+  - "Transformer Architecture + Attention Mechanisms = Improved Model Interpretability"
+  - "Reinforcement Learning + Multi-agent Systems = Collaborative AI Research"
+
+  **Output Format**:
+
+  Output a JSON object with a `metadata` field containing a `connections` array. Each element in the array represents one connection with the required fields.
+
+  ```json
+  {schema}
+  ```
+
+  Example structure:
+  ```json
+  {{
+    "metadata": {{
+      "connections": [
+        {{
+          "source_papers": ["paper_id_1", "paper_id_2"],
+          "connection_type": "complementary",
+          "research_opportunity": "Combining these approaches could...",
+          "confidence": 0.85
+        }},
+        {{
+          "source_papers": ["paper_id_3", "paper_id_4", "paper_id_5"],
+          "connection_type": "evolutionary",
+          "research_opportunity": "Building upon these works...",
+          "confidence": 0.92
+        }}
+      ]
+    }}
+  }}
+  ```
+
+  **Input Data**:
+
+  <paper_memories>
+  {paper_memories}
+  </paper_memories>

@@ -1,0 +1,118 @@
+# Paper Group Updater Agent
+# Matches input papers to existing memory groups and optionally updates group descriptions
+
+model: model_set
+
+schema:
+  type: object
+  description: "Existing group identifier and optionally updated description"
+  properties:
+    group_id:
+      type: string
+      description: "The existing group_id that best matches the input paper (must be one of the existing group_ids)"
+    group_description:
+      type: string
+      description: "The group description, either the existing one or an updated version if the group scope needs refinement"
+
+prompt: |-
+  Name: Paper Group Updater
+  Description: Match an input paper to an existing memory group and optionally update the group description to better reflect its scope
+
+  # PART 1: Task Overview
+
+  Your task is to:
+  1. Analyze the input paper's core theme, research domain, and key contributions
+  2. Review all existing memory groups to find the best matching group
+  3. Select the existing `group_id` that best fits the input paper
+  4. Determine if the existing `group_description` needs updating to better reflect the group's scope
+  5. Output the selected `group_id` and either the existing or updated `group_description`
+
+  # PART 2: Memory Group Structure
+
+  Each existing memory group contains:
+  - `group_id`: A unique identifier for the group (e.g., "benchmarks", "rag-systems", "evaluation-frameworks")
+  - `group_description`: A description of what types of papers belong to this group
+  - `group_content` (or `memory_content`): An array of paper objects already in this group
+
+  # PART 3: Analysis Process
+
+  ## Step 1: Analyze Input Paper
+
+  Extract key information from the input paper:
+  - **Core Theme**: What is the main research focus?
+  - **Research Domain**: What field(s) does it belong to?
+  - **Key Contribution**: What does this paper contribute (benchmark, method, framework, etc.)?
+  - **Methodology**: What approach or methodology does it use?
+  - **Primary Category**: What type of research is this (e.g., benchmark, RAG system, evaluation framework)?
+
+  ## Step 2: Review Existing Memory Groups
+
+  For each existing memory group:
+  - Read the `group_id` to understand the group's intended theme
+  - Read the `group_description` to understand the group's scope
+  - Review papers in `group_content` (or `memory_content`) to see what types of papers are already grouped
+  - Assess how well the input paper matches this group's theme and scope
+
+  ## Step 3: Select Best Matching Group
+
+  Compare the input paper against all existing groups and select the one that:
+  - Has the most similar research theme or methodology
+  - Has a `group_description` that aligns with the input paper's focus
+  - Contains papers with similar characteristics to the input paper
+  - Would naturally accommodate the input paper based on its scope
+
+  **CRITICAL**: You MUST select an existing `group_id` from the provided list. Do NOT create a new group_id.
+
+  ## Step 4: Evaluate Group Description
+
+  After selecting the best matching group, evaluate whether the existing `group_description` needs updating:
+
+  **Keep the existing description if:**
+  - It accurately describes the group's scope including the new paper
+  - It clearly distinguishes this group from others
+  - It would help future papers be correctly assigned to this group
+
+  **Update the description if:**
+  - The input paper introduces a new aspect not covered by the current description
+  - The current description is too narrow and needs to be more inclusive
+  - The current description is unclear or could be improved for better matching
+  - Adding the new paper would expand the group's scope in a meaningful way
+
+  When updating, ensure the new description:
+  - Maintains the core theme of the group
+  - Incorporates the new paper's characteristics
+  - Remains concise (1-2 sentences)
+  - Is specific enough to distinguish from other groups
+  - Reflects all papers that should belong to this group (existing + new)
+
+  # PART 4: Output Format
+
+  Output a JSON object with exactly two fields:
+
+  ```json
+  {schema}
+  ```
+
+  # PART 5: Input Data
+
+  ## Input Paper
+
+  <paper_analysis>
+  {paper_analysis}
+  </paper_analysis>
+
+  ## Existing Memory Groups
+
+  <existing_memories>
+  {existing_memories}
+  </existing_memories>
+
+  # PART 6: Important Notes
+
+  - **MUST** select an existing `group_id` from the provided list - do not create new ones
+  - Choose the group that best matches the input paper's core theme and contribution type
+  - If multiple groups seem suitable, choose the one with the closest thematic match
+  - Update `group_description` only if it would improve the group's clarity or scope
+  - If the existing description is already good, keep it as-is
+  - Consider how the updated description would help future papers be correctly assigned
+  - The description should reflect the group's purpose, not just list the papers it contains
