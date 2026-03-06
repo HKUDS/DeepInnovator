@@ -7,7 +7,7 @@
 
 <div align="center">
 
-## DeepInnovator: Your AI Research Copilot for Scientific Discovery
+## DeepInnovator: AI Research Assistant - Ideation, Analysis & Discovery
 
 | 💡 **Generate Research Ideas and Hypotheses** | 🔗 **Discovers Cross-Disciplinary Connections** | <br>
 | 🔍 **Research Gap & Trend Analysis** | 🛠️ **AI-Powered Scientific Problem Solving** |
