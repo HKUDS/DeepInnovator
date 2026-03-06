@@ -7,7 +7,7 @@
 
 <div align="center">
 
-## DeepInnovator: AI Research Assistant - Ideation, Analysis & Discovery
+## DeepInnovator: AI Research Assistant - Idea Spark & Scientific Discovery
 
 | 💡 **Generate Research Ideas and Hypotheses** | 🔗 **Discovers Cross-Disciplinary Connections** | <br>
 | 🔍 **Research Gap & Trend Analysis** | 🛠️ **AI-Powered Scientific Problem Solving** |
