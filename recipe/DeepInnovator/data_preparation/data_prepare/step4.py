@@ -2,6 +2,7 @@
 
 
 # Standard library imports
+import copy
 import json
 import os
 import random
@@ -151,9 +152,10 @@ def step4_idea_spark(
     
     iteration = 0
     while len(ideas['ideas']) < min_ideas and iteration < max_iterations:
-        connections = layer2.get_connections()
-        serendipity = layer2.get_serendipity()
-        research_trending = layer2.get_research_trending()
+        # dropout_layer2 mutates its inputs; isolate each iteration from the loaded source data.
+        connections = copy.deepcopy(layer2.get_connections())
+        serendipity = copy.deepcopy(layer2.get_serendipity())
+        research_trending = copy.deepcopy(layer2.get_research_trending())
 
         paper_memories = layer1.paper_memory['memories']
         paper_groups = layer1.paper_group
