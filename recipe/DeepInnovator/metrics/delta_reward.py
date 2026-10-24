@@ -112,7 +112,10 @@ async def compute_score(data_source, messages, ground_truth, extra_info, **kwarg
         # If no delta_reward_kwargs, use default_reward_kwargs
         default_reward_kwargs = kwargs.get("default_reward_kwargs", {})
         delta_reward_kwargs = default_reward_kwargs.copy()
-    
+    else:
+        # Reward calls can share this config concurrently; pop only from a local copy.
+        delta_reward_kwargs = delta_reward_kwargs.copy()
+
     model = delta_reward_kwargs.pop("model", "qwen-plus-latest")
 
     history = []
