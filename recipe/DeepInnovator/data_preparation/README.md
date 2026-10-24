@@ -37,7 +37,7 @@ data_preparation/
 
 ## Prerequisites
 
-- Python 3.8+
+- Python 3.10+
 - Required packages: `openai`, `omegaconf`, `python-dotenv`, `feedparser`, `requests`, `PyPDF2`, `tqdm`, `dateutil`
 
 ## Environment Setup

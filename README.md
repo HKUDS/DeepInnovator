@@ -147,7 +147,7 @@ DeepInnovator/
 
 ## Prerequisites
 
-- Python 3.8+
+- Python 3.10+
 - CUDA-capable GPU (for training)
 - VERL framework (for RL training)
 - Required Python packages (see installation section)
