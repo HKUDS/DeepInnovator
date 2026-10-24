@@ -245,11 +245,13 @@ class DeepInnovatorInteraction(BaseInteraction):
             if isinstance(full_response, dict):
                 keys = full_response.keys()
                 if {"authenticity", "confidence", "reasoning"}.issubset(keys):
-                    authenticity = full_response.pop("authenticity")
+                    authenticity_candidate = full_response.pop("authenticity")
                     authenticity_reasoning = full_response.pop("reasoning")
-                    if isinstance(authenticity, int):
+                    if type(authenticity_candidate) is int and authenticity_candidate in (0, 1):
+                        authenticity = authenticity_candidate
                         break
                     else:
+                        authenticity = None
                         logger.warning(
                             f"Retry {i} times, [DeepInnovatorInteraction] got an invaild full_response {full_response}. \
                                 Retrying..."
