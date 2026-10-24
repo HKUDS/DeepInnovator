@@ -40,10 +40,14 @@ def prepare_data(DATAPATH: str, target_paper: str):
     print(f"Found {len(target_paper_path)} matching files:")
     ref_path = Path(f'{DATAPATH}/target_paper/raw_paper/paper_references.json')
     if not ref_path.exists():
+        if not target_paper_path:
+            raise FileNotFoundError(f"Target paper Markdown not found under {target_paper_path_}")
         for path in target_paper_path:
             all_references = extract_paper_references(path)
-            
-    with open(ref_path, 'r') as f:
+        with open(ref_path, 'w', encoding='utf-8') as f:
+            json.dump(all_references, f, ensure_ascii=False, indent=2)
+
+    with open(ref_path, 'r', encoding='utf-8') as f:
         all_references = json.load(f)
     all_ref_paper = []
     for ref in all_references['references']:
