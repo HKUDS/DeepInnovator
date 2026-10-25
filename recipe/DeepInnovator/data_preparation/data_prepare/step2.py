@@ -159,11 +159,24 @@ def step2_paper_analysis(
                         ensure_ascii=False
                     )
                 )
+                max_update_attempts = 3
                 UPDATE_FLAG = False
-                while not UPDATE_FLAG:
+                for _attempt in range(max_update_attempts):
                     result = call_agent('paper_group_updater', update_prompt, config)
+                    if not isinstance(result, dict):
+                        continue
+                    group_id = result.get('group_id')
+                    if not isinstance(group_id, str) or not isinstance(result.get('group_description'), str):
+                        continue
                     result['group_content'] = this_paper_memory
                     UPDATE_FLAG = paper_profile.update_paper_group(result)
+                    if UPDATE_FLAG:
+                        break
+                if not UPDATE_FLAG:
+                    raise RuntimeError(
+                        f"Failed to update paper group after {max_update_attempts} attempts. "
+                        "Paper memory is saved; reconcile its routing state before retrying."
+                    )
                
         # Process new paper creation
         if creator_tasks:
