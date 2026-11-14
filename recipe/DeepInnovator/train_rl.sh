@@ -1,4 +1,24 @@
 
+# Resolve repository-owned paths without changing the caller's working directory.
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)" || exit 1
+PROJECT_DIR="$(cd -- "$SCRIPT_DIR/../.." && pwd)" || exit 1
+if [ ! -d "$PROJECT_DIR/verl" ]; then
+    printf 'Missing bundled verl directory: %s\n' "$PROJECT_DIR/verl" >&2
+    exit 1
+fi
+AGENTLOOP_CONFIG_PATH="$SCRIPT_DIR/config/agent.yaml"
+RewardFunctionPath="$SCRIPT_DIR/reward_function.py"
+RewardConfigPath="$SCRIPT_DIR/config/reward_config.yaml"
+INTERACTION_CONFIG_PATH="$SCRIPT_DIR/config/ResearchGAN_interaction_config.yaml"
+for required in "$AGENTLOOP_CONFIG_PATH" "$RewardFunctionPath" "$RewardConfigPath" "$INTERACTION_CONFIG_PATH"; do
+    if [ ! -f "$required" ]; then
+        printf 'Missing required launcher file: %s\n' "$required" >&2
+        exit 1
+    fi
+done
+export PYTHONPATH="$PROJECT_DIR${PYTHONPATH:+:$PYTHONPATH}"
+# End launcher path setup.
+
 # set -x
 
 which python
@@ -6,7 +26,6 @@ export HYDRA_FULL_ERROR=1
 # export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 echo "PYTORCH_CUDA_ALLOC_CONF: $PYTORCH_CUDA_ALLOC_CONF"
 ulimit -n 65535
-cd ./verl-main
 
 
 # export VLLM_ATTENTION_BACKEND=XFORMERS
@@ -25,7 +44,6 @@ export HYDRA_FULL_ERROR=1
 export VERL_LOGGING_LEVEL=DEBUG
 ##
 
-PROJECT_DIR="$(pwd)"
 export VLLM_USE_V1=1
 
 RESUME_PATH="${1:-}"
@@ -36,10 +54,6 @@ fi
 
 
 MODEL_DIR="./qwen2.5-14b-it"
-PROJECT_DIR="$(pwd)"
-
-AGENTLOOP_CONFIG_PATH="$PROJECT_DIR/recipe/DeepInnovator/config/agent.yaml"
-
 WANDB_PROJECT_NAME="DeepInnovator"
 
 WANDB_EXPERIMENT_NAME="DeepInnovator"
@@ -50,9 +64,7 @@ PPO_MINI_BATCH_SIZE=4
 N_ROLLOUTS=8
 
 
-RewardFunctionPath="$PROJECT_DIR/recipe/DeepInnovator/reward_function.py"
 RewardFunctionName="conversation_level_reward_func"
-RewardConfigPath="$PROJECT_DIR/recipe/DeepInnovator/config/reward_config.yaml"
 # RewardFunctionName="reward_func"
 
 
@@ -64,7 +76,7 @@ python3 -m verl.trainer.main_ppo \
     data.train_files=$DATASET_DIR/rl_train.parquet \
     data.val_files=$DATASET_DIR/rl_validation.parquet \
     reward_model.reward_manager=DeepInnovator \
-    +reward_model.reward_kwargs.reward_kwargs_path=$RewardConfigPath \
+    +reward_model.reward_kwargs.reward_kwargs_path="$RewardConfigPath" \
     reward_model.use_reward_loop=False \
     data.train_batch_size=$TRAIN_BATCH_SIZE \
     data.max_prompt_length=8192 \
@@ -95,7 +107,7 @@ python3 -m verl.trainer.main_ppo \
     actor_rollout_ref.rollout.multi_turn.max_user_turns=5 \
     actor_rollout_ref.rollout.multi_turn.max_assistant_turns=6 \
     actor_rollout_ref.rollout.multi_turn.num_repeat_rollouts=3 \
-    actor_rollout_ref.rollout.agent.agent_loop_config_path=$AGENTLOOP_CONFIG_PATH \
+    actor_rollout_ref.rollout.agent.agent_loop_config_path="$AGENTLOOP_CONFIG_PATH" \
     actor_rollout_ref.ref.fsdp_config.param_offload=True \
     algorithm.use_kl_in_reward=False \
     trainer.critic_warmup=0 \
@@ -108,7 +120,7 @@ python3 -m verl.trainer.main_ppo \
     trainer.save_freq=10 \
     trainer.test_freq=10 \
     trainer.total_epochs=3 \
-    custom_reward_function.path=$RewardFunctionPath \
+    custom_reward_function.path="$RewardFunctionPath" \
     custom_reward_function.name=$RewardFunctionName \
-    actor_rollout_ref.rollout.multi_turn.interaction_config_path="$PROJECT_DIR/recipe/DeepInnovator/config/DeepInnovator_interaction_config.yaml" \
-    trainer.resume_from_path=$RESUME_PATH 2>&1 | tee ./recipe/DeepInnovator/DeepInnovator_train.log
+    actor_rollout_ref.rollout.multi_turn.interaction_config_path="$INTERACTION_CONFIG_PATH" \
+    trainer.resume_from_path=$RESUME_PATH 2>&1 | tee "$SCRIPT_DIR/DeepInnovator_train.log"
