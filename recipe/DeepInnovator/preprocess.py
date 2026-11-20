@@ -238,7 +238,10 @@ def main():
     ap.add_argument("--task_desc", default="refine a research idea", help="Task description for the dataset.")
     ap.add_argument("--output_dir", default="./data/train", help="Output directory.")
     ap.add_argument(
-        "--validation_size", type=float, default=0.1, help="Validation split size (fraction or absolute int)."
+        "--validation_size",
+        type=float,
+        default=0.1,
+        help="Fraction of the dataset reserved for validation (e.g., 0.1).",
     )
     ap.add_argument("--seed", type=int, default=42, help="Random seed for splitting.")
     ap.add_argument("--num_proc", type=int, default=1, help="Parallel workers for map().")

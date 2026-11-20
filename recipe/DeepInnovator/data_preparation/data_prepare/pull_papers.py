@@ -150,7 +150,9 @@ def main() -> None:
     datapath.mkdir(parents=True, exist_ok=True)
     
     # Calculate papers per category (evenly distributed)
-    papers_per_category = max(1, total_papers // len(TARGET_CATEGORIES))
+    papers_per_category = max(
+        1, (total_papers + len(TARGET_CATEGORIES) - 1) // len(TARGET_CATEGORIES)
+    )
     
     print(f"Starting to fetch papers:")
     print(f"  Target: {total_papers} papers")

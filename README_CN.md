@@ -135,7 +135,7 @@ DeepInnovator/
 
 ## 环境要求
 
-- Python 3.8+
+- Python 3.10+
 - 支持 CUDA 的 GPU（用于训练）
 - VERL 框架（用于强化学习训练）
 - 必需的 Python 包（见安装部分）

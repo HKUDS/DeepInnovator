@@ -180,8 +180,8 @@ def step1_paper2json(
 
     # Filter out papers that have already been processed (based on output JSON files)
     # This provides an additional layer of deduplication beyond the JSONL check
-    existing_titles = [f.stem for f in Path(paper_memory_dir).glob("*.json")]
-    papers = [paper for paper in papers if paper.get('title', '').lower().strip() not in existing_titles]
+    existing_paper_ids = {f.stem for f in Path(paper_memory_dir).glob("*.json")}
+    papers = [paper for paper in papers if paper['paper_id'] not in existing_paper_ids]
     print(f"Filtered papers count: {len(papers)}, originally had {len(all_paper_ids)} papers")
 
     # Initialize timestamp and counter for paper processing
